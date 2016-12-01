@@ -1,0 +1,41 @@
+class CLI
+
+  def prompt
+    puts "Enter your email:"
+    email = gets.chomp
+    @current_user = User.find_by(email: email)
+    raise "the user does not exist" if @current_user.nil?
+  end
+
+  def create_short_url
+    puts "Type in your long URL"
+    url = ShortenedUrl.create_for_user_and_long_url!(@current_user, gets.chomp)
+    puts "Short URL is: #{url.short_url}"
+  end
+
+  def visit_url
+    puts "Type in the shortened URL"
+    shortened_url = ShortenedUrl.find_by(short_url: gets.chomp)
+    raise "no such url found!" if shortened_url.nil?
+    Visit.record_visit!(@current_user, shortened_url)
+    puts "Launching #{shortened_url.long_url}..."
+    Launchy.open(shortened_url.long_url)
+  end
+
+  def run
+    prompt
+    puts "What do you want to do?\n
+        0. Create shortened URL\n
+        1. Visit shortened URL"
+
+    case gets.chomp.to_i
+    when 0
+      create_short_url
+    when 1
+      visit_url
+    end
+    puts "Goodbye!"
+  end
+end
+
+CLI.new.run
